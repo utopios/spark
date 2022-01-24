@@ -11,6 +11,8 @@ public class MovieRating {
         //Création d'un context
         JavaSparkContext sc = new JavaSparkContext("local[*]", "local-1643016514494");
 
+
+        //Création RDD simple à partir d'un fichier data
         JavaRDD rdd = sc.textFile("data/film.data").map(l -> l.split("\t")[2]);
 
         //Action qui permet de renvoyer le nombre de chaque valeur.

@@ -21,8 +21,12 @@ public class Main {
         //List result = rdd2.collect();
 
         //Execution de la classe MovieRating => Récupérer les notes des films
-        MovieRating movieRating = new MovieRating();
+       /* MovieRating movieRating = new MovieRating();
 
-        Map result = movieRating.getMoviesRating();
+        Map result = movieRating.getMoviesRating();*/
+
+        //Execution de la classe FriendsAvrage => Récupérer la moyenne d'amis par âge
+        FriendsAvrage friendsAvrage = new FriendsAvrage();
+        List result = friendsAvrage.getAvrage();
     }
 }
