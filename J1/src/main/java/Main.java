@@ -26,7 +26,11 @@ public class Main {
         Map result = movieRating.getMoviesRating();*/
 
         //Execution de la classe FriendsAvrage => Récupérer la moyenne d'amis par âge
-        FriendsAvrage friendsAvrage = new FriendsAvrage();
-        List result = friendsAvrage.getAvrage();
+        /*FriendsAvrage friendsAvrage = new FriendsAvrage();
+        List result = friendsAvrage.getAvrage();*/
+
+        //Execution de la classe Meteo pour récuperer la temperature min
+        Meteo m = new Meteo();
+        List result = m.getMinTemperature();
     }
 }
