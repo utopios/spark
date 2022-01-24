@@ -2,6 +2,7 @@ import models.Personne;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
@@ -9,7 +10,7 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
 import tools.SpContext;
-
+import static org.apache.spark.sql.functions.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,11 @@ public class Main {
                 .add("numberFriends", DataTypes.IntegerType, true);
         Dataset<Personne> dataPersonnes = session.read().schema(type).csv("data/friends.csv").as(Encoders.bean(Personne.class));
         dataPersonnes.createOrReplaceTempView("personnes");
-        Object l = session.sql("SELECT * from personnes where age > 25 and age < 30").collect();
+        //Object l = session.sql("SELECT * from personnes where age > 25 and age < 30").collect();
+        //Utilisation de la fonction filter
+        Object l = dataPersonnes.filter((FilterFunction<Personne>) e -> e.getAge() > 25 && e.getAge() < 30).collect();
 
+        //Utilisation de la fonction groupby
+        dataPersonnes.groupBy("age").count().show();
     }
 }
