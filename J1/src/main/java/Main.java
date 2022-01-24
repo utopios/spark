@@ -30,7 +30,11 @@ public class Main {
         List result = friendsAvrage.getAvrage();*/
 
         //Execution de la classe Meteo pour récuperer la temperature min
-        Meteo m = new Meteo();
-        List result = m.getMinTemperature();
+        //Meteo m = new Meteo();
+        //List result = m.getMinTemperature();
+
+        //Execution de la classe wordCounter pour récupérer le nombre de mots de book.txt
+        WordCounter wordCounter = new WordCounter();
+        int result = wordCounter.getWordNumber();
     }
 }
