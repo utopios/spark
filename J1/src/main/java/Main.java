@@ -1,5 +1,7 @@
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import scala.Tuple2;
 
 import java.util.Arrays;
 import java.util.List;
@@ -9,7 +11,7 @@ public class Main {
 
     public static void main(String[] args) {
         //Création d'un context
-        //JavaSparkContext sc = new JavaSparkContext("local[*]", "local-1643016514494");
+        JavaSparkContext sc = new JavaSparkContext("local[*]", "local-1643016514494");
 
         //Création d'une RDD à partir d'une liste d'entier
         //JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(2,4,6,8,32));
@@ -34,7 +36,16 @@ public class Main {
         //List result = m.getMinTemperature();
 
         //Execution de la classe wordCounter pour récupérer le nombre de mots de book.txt
-        WordCounter wordCounter = new WordCounter();
-        int result = wordCounter.getWordNumber();
+        /*WordCounter wordCounter = new WordCounter();
+        int result = wordCounter.getWordNumber();*/
+
+
+        //Correction exercice 1 => Récuperer le total d'achat par client.
+        JavaPairRDD rdd = sc.textFile("data/customer-orders.csv").mapToPair(e -> {
+            String[] data = e.split(",");
+            return new Tuple2(new Integer(data[0]), new Double(data[2]));
+        }).reduceByKey((a,b) -> (double)Math.round((double)a + (double)b));
+
+        List result = rdd.collect();
     }
 }
