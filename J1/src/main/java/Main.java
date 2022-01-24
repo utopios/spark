@@ -59,7 +59,7 @@ public class Main {
 
         //Exemple SPARK SQL
         //Création d'un dataSet à partir de l'entete de la source.
-        SparkSession session = SpContext.getSession();
+        /*SparkSession session = SpContext.getSession();
         //Type dataSet    nom du DataSet  session pour acceder à notre instance spark, lecture à partir du header du schema, fichier css, verifier que le schema convient à la classe personne.
         //Dataset<Personne> dataPersonnes = session.read().option("header", true).option("inferSchema", true).csv("data/friends.csv").as(Encoders.bean(Personne.class));
 
@@ -79,6 +79,9 @@ public class Main {
         dataPersonnes.groupBy("age").count().show();
 
         //Exercice 1 avg friends avec DataSet
-        dataPersonnes.groupBy("age").agg(avg("numberFriends").alias("averge")).sort("age").show();
+        dataPersonnes.groupBy("age").agg(avg("numberFriends").alias("averge")).sort("age").show();*/
+
+        //Exercice total by customer
+        Object result = new CustomerTotalDataSet().getTotalByCustomer();
     }
 }
