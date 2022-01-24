@@ -77,5 +77,8 @@ public class Main {
 
         //Utilisation de la fonction groupby
         dataPersonnes.groupBy("age").count().show();
+
+        //Exercice 1 avg friends avec DataSet
+        dataPersonnes.groupBy("age").agg(avg("numberFriends").alias("averge")).sort("age").show();
     }
 }
