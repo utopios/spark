@@ -1,7 +1,14 @@
+import models.Personne;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
+import tools.SpContext;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,11 +48,29 @@ public class Main {
 
 
         //Correction exercice 1 => Récuperer le total d'achat par client.
-        JavaPairRDD rdd = sc.textFile("data/customer-orders.csv").mapToPair(e -> {
+        /*JavaPairRDD rdd = sc.textFile("data/customer-orders.csv").mapToPair(e -> {
             String[] data = e.split(",");
             return new Tuple2(new Integer(data[0]), new Double(data[2]));
         }).reduceByKey((a,b) -> (double)Math.round((double)a + (double)b));
 
-        List result = rdd.collect();
+        List result = rdd.collect();*/
+
+
+        //Exemple SPARK SQL
+        //Création d'un dataSet à partir de l'entete de la source.
+        SparkSession session = SpContext.getSession();
+        //Type dataSet    nom du DataSet  session pour acceder à notre instance spark, lecture à partir du header du schema, fichier css, verifier que le schema convient à la classe personne.
+        //Dataset<Personne> dataPersonnes = session.read().option("header", true).option("inferSchema", true).csv("data/friends.csv").as(Encoders.bean(Personne.class));
+
+        //On peut créer la structure explicite.
+        StructType type = new StructType()
+                .add("id", DataTypes.IntegerType,false)
+                .add("name", DataTypes.StringType, false)
+                .add("age", DataTypes.IntegerType, false)
+                .add("numberFriends", DataTypes.IntegerType, true);
+        Dataset<Personne> dataPersonnes = session.read().schema(type).csv("data/friends.csv").as(Encoders.bean(Personne.class));
+        dataPersonnes.createOrReplaceTempView("personnes");
+        Object l = session.sql("SELECT * from personnes where age > 25 and age < 30").collect();
+
     }
 }
