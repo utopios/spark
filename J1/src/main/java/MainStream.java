@@ -21,14 +21,14 @@ public class MainStream {
         /*Dataset dataset = SpContext.getSession().readStream().format("rate").load().withColumn("result", col("value"));
         dataset.writeStream().format("console").outputMode("complete").start().awaitTermination();*/
 
-        StructType type = new StructType()
+        /*StructType type = new StructType()
                 .add("id", DataTypes.IntegerType,false)
                 .add("name", DataTypes.StringType, false)
                 .add("age", DataTypes.IntegerType, false)
-                .add("numberFriends", DataTypes.IntegerType, true);
+                .add("numberFriends", DataTypes.IntegerType, true);*/
 
         //Input file
-        Dataset<Personne> personneDataset = SpContext.getSession().readStream().format("csv").option("header", true).option("path", "data/customers").schema(type).load().as(Encoders.bean(Personne.class));
+//        Dataset<Personne> personneDataset = SpContext.getSession().readStream().format("csv").option("header", true).option("path", "data/customers").schema(type).load().as(Encoders.bean(Personne.class));
         //Socket
         //Dataset datasetSocket = SpContext.getSession().readStream().format("socket").option("host", "localhost").option("port", 7777).load();
         //Kafka
@@ -50,11 +50,21 @@ public class MainStream {
         //personneDataset.writeStream().outputMode("update").format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("topic", "sendTest").start().awaitTermination();
 
         //foreachBatch
-        personneDataset.writeStream().outputMode("update").foreachBatch((dataset, id) -> {
+        /*personneDataset.writeStream().outputMode("update").foreachBatch((dataset, id) -> {
             dataset.foreach(p -> {
                 //Call api
                 System.out.println(p.toString());
             });
+        }).start().awaitTermination();*/
+
+        Dataset dataSetlog = SpContext.getSession().readStream().text("data/logs");
+        Dataset logs = dataSetlog.select(regexp_extract(col("value"),"(^\\S+\\.[\\S+\\.]+\\S+)\\s",1).alias("host"));
+        logs.writeStream().foreachBatch((d,id) -> {
+            ((Dataset)d).groupBy("host").count().foreach( e -> {
+                System.out.println(e);
+            });
         }).start().awaitTermination();
+        //Correction exemple log
+
     }
 }
