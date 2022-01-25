@@ -6,6 +6,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
@@ -13,6 +14,7 @@ import tools.SpContext;
 import static org.apache.spark.sql.functions.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class Main {
@@ -59,7 +61,7 @@ public class Main {
 
         //Exemple SPARK SQL
         //Création d'un dataSet à partir de l'entete de la source.
-        /*SparkSession session = SpContext.getSession();
+        SparkSession session = SpContext.getSession();
         //Type dataSet    nom du DataSet  session pour acceder à notre instance spark, lecture à partir du header du schema, fichier css, verifier que le schema convient à la classe personne.
         //Dataset<Personne> dataPersonnes = session.read().option("header", true).option("inferSchema", true).csv("data/friends.csv").as(Encoders.bean(Personne.class));
 
@@ -70,7 +72,7 @@ public class Main {
                 .add("age", DataTypes.IntegerType, false)
                 .add("numberFriends", DataTypes.IntegerType, true);
         Dataset<Personne> dataPersonnes = session.read().schema(type).csv("data/friends.csv").as(Encoders.bean(Personne.class));
-        dataPersonnes.createOrReplaceTempView("personnes");
+        /*dataPersonnes.createOrReplaceTempView("personnes");
         //Object l = session.sql("SELECT * from personnes where age > 25 and age < 30").collect();
         //Utilisation de la fonction filter
         Object l = dataPersonnes.filter((FilterFunction<Personne>) e -> e.getAge() > 25 && e.getAge() < 30).collect();
@@ -82,6 +84,23 @@ public class Main {
         dataPersonnes.groupBy("age").agg(avg("numberFriends").alias("averge")).sort("age").show();*/
 
         //Exercice total by customer
-        Object result = new CustomerTotalDataSet().getTotalByCustomer();
+        //Object result = new CustomerTotalDataSet().getTotalByCustomer();
+
+        //Exemple d'utilisation d'udf
+        //En Java => à partir du context SQL, on enregistre la fonction udf
+
+        //register prend comme paramètre le nom de la fonction
+        //session.sqlContext().udf().register("toUpper",toUpper,DataTypes.StringType);
+
+        session.sqlContext().udf().register("toUpper",(UDF1<String, String>) e -> e.toUpperCase(),DataTypes.StringType);
+
+        dataPersonnes.withColumn("name_uppercase",callUDF("toUpper", col("name"))).show();
+
     }
+
+    private static UDF1 toUpper = new UDF1<String, String>() {
+        public String call(String element) throws Exception {
+            return element.toUpperCase();
+        }
+    };
 }
