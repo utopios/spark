@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FilterFunction;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
@@ -69,12 +70,12 @@ public class Main {
         //Dataset<Personne> dataPersonnes = session.read().option("header", true).option("inferSchema", true).csv("data/friends.csv").as(Encoders.bean(Personne.class));
 
         //On peut créer la structure explicite.
-        /*StructType type = new StructType()
+        StructType type = new StructType()
                 .add("id", DataTypes.IntegerType,false)
                 .add("name", DataTypes.StringType, false)
                 .add("age", DataTypes.IntegerType, false)
                 .add("numberFriends", DataTypes.IntegerType, true);
-        Dataset<Personne> dataPersonnes = session.read().schema(type).csv("data/friends.csv").as(Encoders.bean(Personne.class));*/
+        Dataset<Personne> dataPersonnes = SpContext.getSession().read().schema(type).csv("data/friends.csv").as(Encoders.bean(Personne.class));
         /*dataPersonnes.createOrReplaceTempView("personnes");
         //Object l = session.sql("SELECT * from personnes where age > 25 and age < 30").collect();
         //Utilisation de la fonction filter
@@ -99,7 +100,7 @@ public class Main {
 
         dataPersonnes.withColumn("name_uppercase",callUDF("toUpper", col("name"))).show();*/
 
-        MovieRatingDataSet movieRatingDataSet = new MovieRatingDataSet(SpContext.getContext(), SpContext.getSession());
+        /*MovieRatingDataSet movieRatingDataSet = new MovieRatingDataSet(SpContext.getContext(), SpContext.getSession());
         SpContext.getSession().sqlContext().udf().register("toUpper",toUpper,DataTypes.StringType);
         Dataset<MovieRate> movieRateDataset = movieRatingDataSet.getRatingDataSet();
         Dataset<MovieName> movieNameDataset = movieRatingDataSet.getMovieNameDataSet();
@@ -108,8 +109,13 @@ public class Main {
                 .join(movieNameDataset,"id")
                 .sort(col("rate").desc())
                 .withColumn("name_upper", callUDF("toUpper", col("name")))
-                .show();
+                .show();*/
 
+        //Variable de BroadCast
+        Broadcast<String> br = SpContext.getContext().broadcast("prefix");
+        //Ajouter une udf qui utilise notre variable de boradCast
+        SpContext.getSession().sqlContext().udf().register("withBroadCast", (UDF1<String, String>) e -> br.getValue() + " "+e.toString(), DataTypes.StringType);
+        dataPersonnes.withColumn("name_with_broad_cast",callUDF("withBroadCast", col("name"))).show();
     }
 
     private static UDF1 toUpper = new UDF1<String, String>() {
