@@ -131,7 +131,7 @@ public class Main {
         //ajouter une fonction udf pour récupérer le nom du film à partir de la col Id et la variable broadcast.
         SpContext.getSession().sqlContext().udf().register("filmName", (UDF1<Integer, String>) e -> broadcastFilmName.getValue().get(new Integer(e.toString())), DataTypes.StringType);
         movieRateDataset.groupBy("id")
-                .agg(max("rate").alias("rate")).withColumn("filmName", callUDF("filmName", col("id"))).foreach(r -> {
+                .agg(max("rate").alias("rate")).withColumn("filmName", callUDF("filmName", col("id"))).persist().foreach(r -> {
                     a.add(1);
                 });
 
