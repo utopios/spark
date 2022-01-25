@@ -61,17 +61,17 @@ public class Main {
 
         //Exemple SPARK SQL
         //Création d'un dataSet à partir de l'entete de la source.
-        SparkSession session = SpContext.getSession();
+        //SparkSession session = SpContext.getSession();
         //Type dataSet    nom du DataSet  session pour acceder à notre instance spark, lecture à partir du header du schema, fichier css, verifier que le schema convient à la classe personne.
         //Dataset<Personne> dataPersonnes = session.read().option("header", true).option("inferSchema", true).csv("data/friends.csv").as(Encoders.bean(Personne.class));
 
         //On peut créer la structure explicite.
-        StructType type = new StructType()
+        /*StructType type = new StructType()
                 .add("id", DataTypes.IntegerType,false)
                 .add("name", DataTypes.StringType, false)
                 .add("age", DataTypes.IntegerType, false)
                 .add("numberFriends", DataTypes.IntegerType, true);
-        Dataset<Personne> dataPersonnes = session.read().schema(type).csv("data/friends.csv").as(Encoders.bean(Personne.class));
+        Dataset<Personne> dataPersonnes = session.read().schema(type).csv("data/friends.csv").as(Encoders.bean(Personne.class));*/
         /*dataPersonnes.createOrReplaceTempView("personnes");
         //Object l = session.sql("SELECT * from personnes where age > 25 and age < 30").collect();
         //Utilisation de la fonction filter
@@ -92,9 +92,9 @@ public class Main {
         //register prend comme paramètre le nom de la fonction
         //session.sqlContext().udf().register("toUpper",toUpper,DataTypes.StringType);
 
-        session.sqlContext().udf().register("toUpper",(UDF1<String, String>) e -> e.toUpperCase(),DataTypes.StringType);
+        /*session.sqlContext().udf().register("toUpper",(UDF1<String, String>) e -> e.toUpperCase(),DataTypes.StringType);
 
-        dataPersonnes.withColumn("name_uppercase",callUDF("toUpper", col("name"))).show();
+        dataPersonnes.withColumn("name_uppercase",callUDF("toUpper", col("name"))).show();*/
 
     }
 
