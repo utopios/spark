@@ -13,6 +13,7 @@ import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.sources.In;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.util.LongAccumulator;
 import scala.Tuple2;
 import tools.ReadFromFile;
 import tools.SpContext;
@@ -78,10 +79,10 @@ public class Main {
                 .add("age", DataTypes.IntegerType, false)
                 .add("numberFriends", DataTypes.IntegerType, true);
         Dataset<Personne> dataPersonnes = SpContext.getSession().read().schema(type).csv("data/friends.csv").as(Encoders.bean(Personne.class));
-        /*dataPersonnes.createOrReplaceTempView("personnes");
+        dataPersonnes.createOrReplaceTempView("personnes");
         //Object l = session.sql("SELECT * from personnes where age > 25 and age < 30").collect();
         //Utilisation de la fonction filter
-        Object l = dataPersonnes.filter((FilterFunction<Personne>) e -> e.getAge() > 25 && e.getAge() < 30).collect();
+        /*Object l = dataPersonnes.filter((FilterFunction<Personne>) e -> e.getAge() > 25 && e.getAge() < 30).collect();
 
         //Utilisation de la fonction groupby
         dataPersonnes.groupBy("age").count().show();
@@ -95,12 +96,18 @@ public class Main {
         //Exemple d'utilisation d'udf
         //En Java => à partir du context SQL, on enregistre la fonction udf
 
+        //Création d'un accumulator
+        LongAccumulator a = SpContext.getSession().sparkContext().longAccumulator("count");
         //register prend comme paramètre le nom de la fonction
         //session.sqlContext().udf().register("toUpper",toUpper,DataTypes.StringType);
 
-        /*session.sqlContext().udf().register("toUpper",(UDF1<String, String>) e -> e.toUpperCase(),DataTypes.StringType);
+        /*session.sqlContext().udf().register("toUpper",(UDF1<String, String>) e -> e.toUpperCase(),DataTypes.StringType);*/
 
-        dataPersonnes.withColumn("name_uppercase",callUDF("toUpper", col("name"))).show();*/
+        dataPersonnes
+                //.withColumn("name_uppercase",callUDF("toUpper", col("name")))
+                .foreach(r -> {
+            a.add(1);
+        });
 
         MovieRatingDataSet movieRatingDataSet = new MovieRatingDataSet(SpContext.getContext(), SpContext.getSession());
         SpContext.getSession().sqlContext().udf().register("toUpper",toUpper,DataTypes.StringType);
@@ -124,7 +131,12 @@ public class Main {
         //ajouter une fonction udf pour récupérer le nom du film à partir de la col Id et la variable broadcast.
         SpContext.getSession().sqlContext().udf().register("filmName", (UDF1<Integer, String>) e -> broadcastFilmName.getValue().get(new Integer(e.toString())), DataTypes.StringType);
         movieRateDataset.groupBy("id")
-                .agg(max("rate").alias("rate")).withColumn("filmName", callUDF("filmName", col("id"))).show();
+                .agg(max("rate").alias("rate")).withColumn("filmName", callUDF("filmName", col("id"))).foreach(r -> {
+                    a.add(1);
+                });
+
+        Long l =  a.value();
+
     }
 
     private static UDF1 toUpper = new UDF1<String, String>() {
