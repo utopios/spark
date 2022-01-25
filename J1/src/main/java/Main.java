@@ -1,6 +1,4 @@
-import models.MovieName;
-import models.MovieRate;
-import models.Personne;
+import models.*;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -8,6 +6,7 @@ import org.apache.spark.api.java.function.FilterFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.sources.In;
@@ -127,7 +126,7 @@ public class Main {
         dataPersonnes.withColumn("name_with_broad_cast",callUDF("withBroadCast", col("name"))).show();*/
 
         //Récupération des films par note avec leur nom, en utlisant une variable de broadcast de type map
-        Broadcast<Map<Integer,String>> broadcastFilmName = SpContext.getContext().broadcast(ReadFromFile.getMapFilmsName());
+        /*Broadcast<Map<Integer,String>> broadcastFilmName = SpContext.getContext().broadcast(ReadFromFile.getMapFilmsName());
         //ajouter une fonction udf pour récupérer le nom du film à partir de la col Id et la variable broadcast.
         SpContext.getSession().sqlContext().udf().register("filmName", (UDF1<Integer, String>) e -> broadcastFilmName.getValue().get(new Integer(e.toString())), DataTypes.StringType);
         movieRateDataset.groupBy("id")
@@ -135,8 +134,28 @@ public class Main {
                     a.add(1);
                 });
 
-        Long l =  a.value();
+        Long l =  a.value();*/
 
+        //Correction TP Marvel => Version 1
+        /*StructType superHeroNameSchema = new StructType().add("id", DataTypes.IntegerType,false).add("name", DataTypes.StringType, false);
+        Dataset<SuperHeroName> superHeroNameDataset = SpContext.getSession().read().schema(superHeroNameSchema).option("sep", " ").csv("data/Marvel-names.txt").as(Encoders.bean(SuperHeroName.class));
+        Dataset<SuperHeroConnection> superHeroConnectionDataset = SpContext.getSession().read().text("data/Marvel-graph.txt").as(Encoders.bean(SuperHeroConnection.class));
+        Dataset connections = superHeroConnectionDataset.withColumn("id",split(col("value"), " ").getItem(0))
+                .withColumn("connections", size(split(col("value"), " ")))
+                .groupBy("id").agg(sum("connections").alias("connections")).sort(col("connections").desc()).cache();
+        Row mostPopular = (Row)connections.first();
+        Object result = superHeroNameDataset.filter((FilterFunction<SuperHeroName>) e -> e.getId() == new Integer(mostPopular.getString(0))).collect();*/
+
+        //Version 2
+        Map herosName = ReadFromFile.getSuperHeroNames();
+        Broadcast<Map<Integer,String>> broadcastSuperHerosName = SpContext.getContext().broadcast(herosName);
+        SpContext.getSession().sqlContext().udf().register("heroName", (UDF1<Integer, String>) e -> broadcastSuperHerosName.getValue().get(new Integer(e.toString())), DataTypes.StringType);
+
+        Dataset<SuperHeroConnection> superHeroConnectionDataset = SpContext.getSession().read().text("data/Marvel-graph.txt").as(Encoders.bean(SuperHeroConnection.class));
+        Dataset connections = superHeroConnectionDataset.withColumn("id",split(col("value"), " ").getItem(0))
+                .withColumn("connections", size(split(col("value"), " ")))
+                .groupBy("id").agg(sum("connections").alias("connections")).sort(col("connections").desc()).withColumn("name", callUDF("heroName", col("id"))).cache();
+        Row mostPopular = (Row)connections.first();
     }
 
     private static UDF1 toUpper = new UDF1<String, String>() {
