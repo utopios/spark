@@ -25,7 +25,7 @@ public class ReadFromFile {
         Map<Integer, String> result = new HashMap<>();
         try {
 
-            File file = new File("data/Marvel-names.item");
+            File file = new File("data/Marvel-names.txt");
             Scanner reader = new Scanner(file);
             while (reader.hasNextLine()) {
                 String[] data = reader.nextLine().split(" \"");
