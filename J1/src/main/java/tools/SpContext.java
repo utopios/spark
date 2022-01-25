@@ -19,7 +19,7 @@ public class SpContext {
     }
 
     private static JavaSparkContext makeContext() {
-       return new JavaSparkContext("local[*]", "local-1643016514494");
+       return new JavaSparkContext("local[*]", "ourSparkApp");
     }
     public static void closeSession() {
         session.close();

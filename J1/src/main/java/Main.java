@@ -1,3 +1,4 @@
+import models.MovieRate;
 import models.Personne;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -20,8 +21,9 @@ import java.util.Map;
 public class Main {
 
     public static void main(String[] args) {
+
         //Création d'un context
-        JavaSparkContext sc = new JavaSparkContext("local[*]", "local-1643016514494");
+        //JavaSparkContext sc = new JavaSparkContext("local[*]", "local-1643016514494");
 
         //Création d'une RDD à partir d'une liste d'entier
         //JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(2,4,6,8,32));
@@ -95,6 +97,20 @@ public class Main {
         /*session.sqlContext().udf().register("toUpper",(UDF1<String, String>) e -> e.toUpperCase(),DataTypes.StringType);
 
         dataPersonnes.withColumn("name_uppercase",callUDF("toUpper", col("name"))).show();*/
+
+        /*MovieRatingDataSet movieRatingDataSet = new MovieRatingDataSet(SpContext.getContext(), SpContext.getSession());
+
+        Dataset<MovieRate> movieRateDataset = movieRatingDataSet.getRatingDataSet();*/
+
+        SparkSession session = SpContext.getSession();
+        JavaSparkContext context = SpContext.getContext();
+        JavaRDD<MovieRate> rddMovieRate = context.textFile("data/film.data").map(r -> {
+            String[] data = r.split("\t");
+            return  new MovieRate(new Integer(data[1]), new Integer(data[2]));
+        });
+        Dataset<MovieRate> movieRateDataset = session.sqlContext().createDataset(rddMovieRate.rdd(), Encoders.bean(MovieRate.class));
+
+        movieRateDataset.groupBy("id").agg(max("rate").alias("rate")).show();
 
     }
 
