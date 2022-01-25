@@ -10,9 +10,11 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.api.java.UDF1;
+import org.apache.spark.sql.sources.In;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import scala.Tuple2;
+import tools.ReadFromFile;
 import tools.SpContext;
 import static org.apache.spark.sql.functions.*;
 import java.util.Arrays;
@@ -100,10 +102,10 @@ public class Main {
 
         dataPersonnes.withColumn("name_uppercase",callUDF("toUpper", col("name"))).show();*/
 
-        /*MovieRatingDataSet movieRatingDataSet = new MovieRatingDataSet(SpContext.getContext(), SpContext.getSession());
+        MovieRatingDataSet movieRatingDataSet = new MovieRatingDataSet(SpContext.getContext(), SpContext.getSession());
         SpContext.getSession().sqlContext().udf().register("toUpper",toUpper,DataTypes.StringType);
         Dataset<MovieRate> movieRateDataset = movieRatingDataSet.getRatingDataSet();
-        Dataset<MovieName> movieNameDataset = movieRatingDataSet.getMovieNameDataSet();
+        /*Dataset<MovieName> movieNameDataset = movieRatingDataSet.getMovieNameDataSet();
         movieRateDataset.groupBy("id")
                 .agg(max("rate").alias("rate"))
                 .join(movieNameDataset,"id")
@@ -111,11 +113,18 @@ public class Main {
                 .withColumn("name_upper", callUDF("toUpper", col("name")))
                 .show();*/
 
-        //Variable de BroadCast
-        Broadcast<String> br = SpContext.getContext().broadcast("prefix");
+        //Variable de BroadCast = Exemple
+        /*Broadcast<String> br = SpContext.getContext().broadcast("prefix");
         //Ajouter une udf qui utilise notre variable de boradCast
         SpContext.getSession().sqlContext().udf().register("withBroadCast", (UDF1<String, String>) e -> br.getValue() + " "+e.toString(), DataTypes.StringType);
-        dataPersonnes.withColumn("name_with_broad_cast",callUDF("withBroadCast", col("name"))).show();
+        dataPersonnes.withColumn("name_with_broad_cast",callUDF("withBroadCast", col("name"))).show();*/
+
+        //Récupération des films par note avec leur nom, en utlisant une variable de broadcast de type map
+        Broadcast<Map<Integer,String>> broadcastFilmName = SpContext.getContext().broadcast(ReadFromFile.getMapFilmsName());
+        //ajouter une fonction udf pour récupérer le nom du film à partir de la col Id et la variable broadcast.
+        SpContext.getSession().sqlContext().udf().register("filmName", (UDF1<Integer, String>) e -> broadcastFilmName.getValue().get(new Integer(e.toString())), DataTypes.StringType);
+        movieRateDataset.groupBy("id")
+                .agg(max("rate").alias("rate")).withColumn("filmName", callUDF("filmName", col("id"))).show();
     }
 
     private static UDF1 toUpper = new UDF1<String, String>() {
