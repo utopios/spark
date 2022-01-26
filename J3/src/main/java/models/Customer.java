@@ -1,24 +1,27 @@
 package models;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+@JsonDeserialize()
 public class Customer {
-    private int cusotmerId;
+    private Integer cusotmerId;
     private String firstName;
     private String lastName;
 
     public Customer() {
     }
 
-    public Customer(int cusotmerId, String firstName, String lastName) {
+    public Customer(Integer cusotmerId, String firstName, String lastName) {
         this.cusotmerId = cusotmerId;
         this.firstName = firstName;
         this.lastName = lastName;
     }
 
-    public int getCusotmerId() {
+    public Integer getCusotmerId() {
         return cusotmerId;
     }
 
-    public void setCusotmerId(int cusotmerId) {
+    public void setCusotmerId(Integer cusotmerId) {
         this.cusotmerId = cusotmerId;
     }
 
