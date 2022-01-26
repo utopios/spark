@@ -1,0 +1,31 @@
+- hosts: spark_master
+  tasks:
+    - name: check connectivity to spark master ui
+      # local_action runs task on the machine running ansible
+      local_action: "uri url=http://{{ HOST_IP }}:{{ SPARK_MASTER_UI_PORT }} return_content=yes"
+      register: spark_master_ui
+    - fail: msg='spark master ui is not available'
+      when: "'Spark Master' not in spark_master_ui.content"
+    - fail: msg='spark workers are not all registered with spark master'
+      when: "'Workers:</strong> {{ groups.spark_worker|length }}</li>' not in spark_master_ui.content"
+
+    - name: check connectivity from spark master to spark workers
+      wait_for: host="{{ HOST_IP }}" port="{{ SPARK_MASTER_PORT }}"
+      with_items:
+        - "{{ groups.spark_worker }}"
+      #delegate_to runs the task on each of the spark workers
+      delegate_to: "{{ item }}"
+      with_items:
+        - "{{ groups.spark_worker }}"
+
+    - name: download spark test app to localhost
+      local_action: "get_url url=https://maven-repo.lan/repositories/releases/content/com/newsweaver/spark/test/spk-test-pi/{{ SPARK_TEST_JAR_VERSION }}/spk-test-pi-{{ SPARK_TEST_JAR_VERSION }}.jar dest=/tmp/spk-test-pi-{{ SPARK_TEST_JAR_VERSION }}.jar"
+
+    - name: upload spark test app to spark master
+      copy: "src=/tmp/spk-test-pi-{{ SPARK_TEST_JAR_VERSION }}.jar dest=/tmp/spk-test-pi-{{ SPARK_TEST_JAR_VERSION }}.jar"
+
+    - name: start spark test app
+      shell: "{{ SPARK_HOME }}/bin/spark-submit --class com.newsweaver.spark.test.EstimatePiSparkApp /tmp/spk-test-pi-{{ SPARK_TEST_JAR_VERSION }}.jar"
+      register: spark_test_app
+    - fail: msg='spark test job failed'
+      when: "'Pi is roughly' not in spark_test_app.stdout"
