@@ -24,7 +24,7 @@ public class MovieRatingDataSet {
         SparkSession session = SpContext.getSession();*/
         JavaRDD<MovieRate> rddMovieRate = context.textFile("data/film.data").map(r -> {
             String[] data = r.split("\t");
-            return  new MovieRate(new Integer(data[1]), new Integer(data[2]));
+            return  new MovieRate(new Integer(data[1]), new Integer(data[2]),  new Integer(data[0]));
         });
         Dataset<MovieRate> movieRateDataset = session.sqlContext().createDataset(rddMovieRate.rdd(), Encoders.bean(MovieRate.class));
 
