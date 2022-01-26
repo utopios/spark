@@ -1,0 +1,4 @@
+--Pour faire fonctionner le borker kafka, on utilise un docker-compose
+ host : localhost, port: 9092, topic: interact
+-- Pour démarrer l'api rest, on utilise nodejs : node apiRest/index.js (L'api rest est sur le port 3000)
+-- Pour démarrer l'émulateur d'envoie de données dans notre broker kafka, on utilise une application en nodejs : node kafka-producer/index.js

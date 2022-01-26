@@ -4,7 +4,6 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
 
 public class SpContext {
-
     private static final SparkSession session = makeSession();
     private static final JavaSparkContext context = makeContext();
 
@@ -19,9 +18,10 @@ public class SpContext {
     }
 
     private static JavaSparkContext makeContext() {
-       return new JavaSparkContext(session.sparkContext());
+        return new JavaSparkContext(session.sparkContext());
     }
     public static void closeSession() {
         session.close();
     }
+
 }
